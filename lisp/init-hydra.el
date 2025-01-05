@@ -1,6 +1,6 @@
 ;; init-hydra.el --- Initialize hydra configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2019-2023 Vincent Zhang
+;; Copyright (C) 2019-2024 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -30,11 +30,26 @@
 
 ;;; Code:
 
-(require 'init-custom)
-(require 'init-funcs)
-
 (use-package hydra
-  :hook (emacs-lisp-mode . hydra-add-imenu))
+  :hook (emacs-lisp-mode . hydra-add-imenu)
+  :init
+  (when (childframe-completion-workable-p)
+    (setq hydra-hint-display-type 'posframe)
+
+    (with-eval-after-load 'posframe
+      (defun hydra-set-posframe-show-params ()
+        "Set hydra-posframe style."
+        (setq hydra-posframe-show-params
+              `(:left-fringe 8
+                :right-fringe 8
+                :internal-border-width 2
+                :internal-border-color ,(face-background 'posframe-border nil t)
+                :background-color ,(face-background 'tooltip nil t)
+                :foreground-color ,(face-foreground 'tooltip nil t)
+                :lines-truncate t
+                :poshandler posframe-poshandler-frame-center-near-bottom)))
+      (hydra-set-posframe-show-params)
+      (add-hook 'after-load-theme-hook #'hydra-set-posframe-show-params t))))
 
 (use-package pretty-hydra
   :bind ("<f6>" . toggles-hydra/body)
@@ -48,7 +63,7 @@
   (cl-defun pretty-hydra-title (title &optional icon-type icon-name
                                       &key face height v-adjust)
     "Add an icon in the hydra title."
-    (let ((face (or face `(:foreground ,(face-background 'highlight))))
+    (let ((face (or face 'mode-line-emphasis))
           (height (or height 1.2))
           (v-adjust (or v-adjust 0.0)))
       (concat
@@ -92,8 +107,7 @@
         ("h i" highlight-indent-guides-mode "indent" :toggle t)
         ("h t" global-hl-todo-mode "todo" :toggle t))
        "Program"
-       (("F" flycheck-mode "flycheck" :toggle t)
-        ("f" flymake-mode "flymake" :toggle t)
+       (("f" flymake-mode "flymake" :toggle t)
         ("O" hs-minor-mode "hideshow" :toggle t)
         ("u" subword-mode "subword" :toggle t)
         ("W" which-function-mode "which function" :toggle t)
@@ -126,15 +140,10 @@
          :toggle (centaur-theme-enable-p 'day) :exit t)
         ("t n" (centaur-load-theme 'night) "night"
          :toggle (centaur-theme-enable-p 'night) :exit t)
-        ("t o" (ivy-read "Load custom theme: "
-                         (all-completions "doom" (custom-available-themes))
-                         :action (lambda (theme)
-                                   (centaur-set-variable
-                                    'centaur-theme
-                                    (let ((x (intern theme)))
-                                      (or (car (rassoc x centaur-theme-alist)) x)))
-                                   (counsel-load-theme-action theme))
-                         :caller 'counsel-load-theme)
+        ("t o" (centaur-load-theme
+                (intern (completing-read "Load custom theme: "
+                                         (mapcar #'symbol-name
+				                                 (custom-available-themes)))))
          "others"
          :toggle (not (or (rassoc (car custom-enabled-themes) centaur-theme-alist)
                           (rassoc (cadr custom-enabled-themes) centaur-theme-alist)))
@@ -142,10 +151,10 @@
        "Package Archive"
        (("p m" (centaur-set-package-archives 'melpa t)
          "melpa" :toggle (eq centaur-package-archives 'melpa) :exit t)
-        ("p c" (centaur-set-package-archives 'emacs-cn t)
-         "emacs-cn" :toggle (eq centaur-package-archives 'emacs-cn) :exit t)
         ("p b" (centaur-set-package-archives 'bfsu t)
          "bfsu" :toggle (eq centaur-package-archives 'bfsu) :exit t)
+        ("p i" (centaur-set-package-archives 'iscas t)
+         "iscas" :toggle (eq centaur-package-archives 'iscas) :exit t)
         ("p n" (centaur-set-package-archives 'netease t)
          "netease" :toggle (eq centaur-package-archives 'netease) :exit t)
         ("p s" (centaur-set-package-archives 'sjtu t)

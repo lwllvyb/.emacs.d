@@ -1,6 +1,6 @@
 ;; init-docker.el --- Initialize docker configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2019-2023 Vincent Zhang
+;; Copyright (C) 2019-2024 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -30,7 +30,8 @@
 
 ;;; Code:
 
-(require 'init-const)
+(eval-when-compile
+  (require 'init-const))
 
 ;; Docker
 (use-package docker

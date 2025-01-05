@@ -1,6 +1,6 @@
 ;; init-window.el --- Initialize window configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2006-2023 Vincent Zhang
+;; Copyright (C) 2006-2024 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -29,8 +29,6 @@
 ;;
 
 ;;; Code:
-
-(require 'init-const)
 
 ;; Directional window-selection routines
 (use-package windmove
@@ -61,18 +59,18 @@
     :foreign-keys warn :quit-key ("q" "C-g"))
    ("Actions"
     (("TAB" other-window "switch")
-     ("x" ace-delete-window "delete" :exit t)
+     ("x" ace-delete-window "delete")
      ("X" ace-delete-other-windows "delete other" :exit t)
-     ("s" ace-swap-window "swap" :exit t)
+     ("s" ace-swap-window "swap")
      ("a" ace-select-window "select" :exit t)
      ("m" toggle-frame-maximized "maximize" :exit t)
-     ("f" toggle-frame-fullscreen "fullscreen" :exit t))
+     ("u" toggle-frame-fullscreen "fullscreen" :exit t))
     "Resize"
     (("h" shrink-window-horizontally "←")
      ("j" enlarge-window "↓")
      ("k" shrink-window "↑")
      ("l" enlarge-window-horizontally "→")
-     ("n" balance-windows "balance" :exit t))
+     ("n" balance-windows "balance"))
     "Split"
     (("r" split-window-right "horizontally")
      ("R" split-window-horizontally-instead "horizontally instead")
@@ -84,9 +82,12 @@
      ("=" text-scale-increase "in")
      ("-" text-scale-decrease "out")
      ("0" (text-scale-increase 0) "reset"))
-    "Appearance"
-    (("F" set-frame-font "font")
-     ("T" centaur-load-theme "theme"))))
+    "Misc"
+    (("o" set-frame-font "frame font")
+     ("f" make-frame-command "new frame")
+     ("d" delete-frame "delete frame")
+     ("<left>" winner-undo "winner undo")
+     ("<right>" winner-redo "winner redo"))))
   :custom-face
   (aw-leading-char-face ((t (:inherit font-lock-keyword-face :foreground unspecified :bold t :height 3.0))))
   (aw-minibuffer-leading-char-face ((t (:inherit font-lock-keyword-face :bold t :height 1.0))))
@@ -146,29 +147,29 @@
 
 ;; Enforce rules for popups
 (use-package popper
-  :defines popper-echo-dispatch-actions
-  :autoload popper-group-by-directory
+  :custom
+  (popper-group-function #'popper-group-by-directory)
+  (popper-echo-dispatch-actions t)
   :bind (:map popper-mode-map
-         ("C-h z"     . popper-toggle-latest)
-         ("C-<tab>"   . popper-cycle)
-         ("C-M-<tab>" . popper-toggle-type))
-  :hook (emacs-startup . popper-mode)
+         ("C-h z"       . popper-toggle)
+         ("C-<tab>"     . popper-cycle)
+         ("C-M-<tab>"   . popper-toggle-type))
+  :hook (emacs-startup . popper-echo-mode)
   :init
-  (setq popper-group-function #'popper-group-by-directory)
   (setq popper-reference-buffers
-        '("\\*Messages\\*"
+        '("\\*Messages\\*$"
           "Output\\*$" "\\*Pp Eval Output\\*$"
-          "\\*Compile-Log\\*"
-          "\\*Completions\\*"
-          "\\*Warnings\\*"
-          "\\*Async Shell Command\\*"
-          "\\*Apropos\\*"
-          "\\*Backtrace\\*"
-          "\\*Calendar\\*"
-          "\\*Embark Actions\\*"
-          "\\*Finder\\*"
-          "\\*Kill Ring\\*"
-          "\\*Go-Translate\\*"
+          "^\\*eldoc.*\\*$"
+          "\\*Compile-Log\\*$"
+          "\\*Completions\\*$"
+          "\\*Warnings\\*$"
+          "\\*Async Shell Command\\*$"
+          "\\*Apropos\\*$"
+          "\\*Backtrace\\*$"
+          "\\*Calendar\\*$"
+          "\\*Fd\\*$" "\\*Find\\*$" "\\*Finder\\*$"
+          "\\*Kill Ring\\*$"
+          "\\*Embark \\(Collect\\|Live\\):.*\\*$"
 
           bookmark-bmenu-mode
           comint-mode
@@ -182,16 +183,16 @@
 
           gnus-article-mode devdocs-mode
           grep-mode occur-mode rg-mode deadgrep-mode ag-mode pt-mode
-          ivy-occur-mode ivy-occur-grep-mode
           youdao-dictionary-mode osx-dictionary-mode fanyi-mode
+          "^\\*gt-result\\*$" "^\\*gt-log\\*$"
 
-          "^\\*Process List\\*" process-menu-mode
+          "^\\*Process List\\*$" process-menu-mode
           list-environment-mode cargo-process-mode
 
-          "^\\*eshell.*\\*.*$"       eshell-mode
-          "^\\*shell.*\\*.*$"        shell-mode
-          "^\\*terminal.*\\*.*$"     term-mode
-          "^\\*vterm[inal]*.*\\*.*$" vterm-mode
+          "^\\*.*eshell.*\\*.*$"
+          "^\\*.*shell.*\\*.*$"
+          "^\\*.*terminal.*\\*.*$"
+          "^\\*.*vterm[inal]*.*\\*.*$"
 
           "\\*DAP Templates\\*$" dap-server-log-mode
           "\\*ELP Profiling Restuls\\*" profiler-report-mode
@@ -202,7 +203,8 @@
           "\\*lsp-help\\*$" "\\*lsp session\\*$"
           "\\*quickrun\\*$"
           "\\*tldr\\*$"
-          "\\*vc-.*\\*$"
+          "\\*vc-.*\\**"
+          "\\*diff-hl\\**"
           "^\\*macro expansion\\**"
 
           "\\*Agenda Commands\\*" "\\*Org Select\\*" "\\*Capture\\*" "^CAPTURE-.*\\.org*"
@@ -215,18 +217,15 @@
   (with-eval-after-load 'doom-modeline
     (setq popper-mode-line
           '(:eval (let ((face (if (doom-modeline--active)
-                                  'mode-line-emphasis
-                                'mode-line-inactive)))
+                                  'doom-modeline-emphasis
+                                'doom-modeline)))
                     (if (and (icons-displayable-p)
+                             (bound-and-true-p doom-modeline-icon)
                              (bound-and-true-p doom-modeline-mode))
                         (format " %s "
                                 (nerd-icons-octicon "nf-oct-pin" :face face))
-                      (propertize " POP" 'face face))))))
-
-  (setq popper-echo-dispatch-actions t)
+                      (propertize " POP " 'face face))))))
   :config
-  (popper-echo-mode 1)
-
   (with-no-warnings
     (defun my-popper-fit-window-height (win)
       "Determine the height of popup window WIN by fitting it to the buffer's content."
@@ -239,11 +238,17 @@
     (defun popper-close-window-hack (&rest _)
       "Close popper window via `C-g'."
       ;; `C-g' can deactivate region
-      (when (and (called-interactively-p 'interactive)
-                 (not (region-active-p))
-                 popper-open-popup-alist)
-        (let ((window (caar popper-open-popup-alist)))
-          (when (window-live-p window)
+      (when (and ;(called-interactively-p 'interactive)
+             (not (region-active-p))
+             popper-open-popup-alist)
+        (when-let* ((window (caar popper-open-popup-alist))
+                    (buffer (cdar popper-open-popup-alist)))
+          (when (and (with-current-buffer buffer
+                       (not (derived-mode-p 'eshell-mode
+                                            'shell-mode
+                                            'term-mode
+                                            'vterm-mode)))
+                     (window-live-p window))
             (delete-window window)))))
     (advice-add #'keyboard-quit :before #'popper-close-window-hack)))
 
