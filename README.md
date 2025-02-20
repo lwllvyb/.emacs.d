@@ -17,7 +17,7 @@
 - [Prerequisite](#prerequisite)
   - [OS](#os)
   - [GNU Emacs](#gnu-emacs)
-  - [Dotfiles](#dotfiles)
+  - [Dotfiles (Optional)](#dotfiles-optional)
 - [Quick Start](#quick-start)
   - [Install](#install)
   - [Update](#update)
@@ -39,8 +39,8 @@ an easy to use Emacs configuration for Emacs newcomers and lots of additional
 power for Emacs power users.
 
 It's able to run on Windows, GNU Linux and macOS. It is compatible **ONLY with
-GNU Emacs 26.1 and above**. In general you're advised to always run with the
-latest stable release - currently **28.2**.
+GNU Emacs 27.1 and above**. In general you're advised to always run with the
+latest stable release - currently **29.2**.
 
 ## Features
 
@@ -81,7 +81,7 @@ latest stable release - currently **28.2**.
 
 Please refer to [Installing Emacs](http://wikemacs.org/index.php/Installing_Emacs).
 
-### Dotfiles
+### Dotfiles (Optional)
 
 Recommend to use [Centaur Dotfiles](https://github.com/seagle0128/dotfiles).
 
@@ -140,13 +140,6 @@ M-x centaur-update-packages
 M-x centaur-update-all
 ```
 
-**Trick**: Update configurations and packages in shell.
-
-```shell
-alias upgrade_emacs='emacs -Q --batch -L "$HOME/.emacs.d/lisp/" -l "init-funcs.el" -l "init-package.el" --eval "(update-config-and-packages t)"'
-
-```
-
 ### Docker
 
 ```shell
@@ -176,12 +169,11 @@ For Example:
 (setq centaur-socks-proxy "127.0.0.1:1086")    ; SOCKS proxy
 (setq centaur-server t)                        ; Enable `server-mode' or not: t or nil
 (setq centaur-icon t)                          ; Display icons or not: t or nil
-(setq centaur-package-archives 'melpa)         ; Package repo: melpa, emacs-cn, bfsu, netease, sjtu, tencent, tuna or ustc
+(setq centaur-package-archives 'melpa)         ; Package repo: melpa, bfsu, iscas, netease, sjtu, tencent, tuna or ustc
 (setq centaur-theme 'auto)                     ; Color theme: auto, random, system, default, pro, dark, light, warm, cold, day or night
 (setq centaur-completion-style 'minibuffer)    ; Completion display style: minibuffer or childframe
 (setq centaur-dashboard nil)                   ; Display dashboard at startup or not: t or nil
-(setq centaur-restore-frame-geometry nil)      ; Restore the frame's geometry at startup: t or nil
-(setq centaur-lsp 'eglot)                      ; Set LSP client: lsp-mode, eglot or nil
+(setq centaur-lsp 'lsp-mode)                   ; Set LSP client: lsp-mode, eglot or nil
 (setq centaur-lsp-format-on-save t)            ; Auto format buffers on save: t or nil
 (setq centaur-lsp-format-on-save-ignore-modes '(c-mode c++-mode python-mode markdown-mode)) ; Ignore format on save for some languages
 (setq centaur-tree-sitter nil)                 ; Enable tree-sitter or not: t or nil. Only available in 29+.
@@ -200,13 +192,11 @@ or`~/.emacs.d/custom-post.el`.
 ## Hydra
 
 | Name                     | Scope                 | Keybinding        | Description                          |
-| ------------------------ | --------------------- | ----------------- | ------------------------------------ |
+|--------------------------|-----------------------|-------------------|--------------------------------------|
 | `toggles-hydra`          | global                | `<f6>`            | Global option toggles                |
 | `window-hydra`           | global                | `C-c w`/`C-x o w` | Window management                    |
 | `doom-modeline-hydra`    | doom-modeline-mode    | `C-<f6>`          | Mode-line options and actions        |
-| `hydra-ivy`              | minibuffer, ivy-mode  | `C-o`             | Additional key bindings for Ivy      |
-| `ivy-hydra-read-action`  | minibuffer, ivy-mode  | `M-o`             | Actions for`ivy-dispatching-done`    |
-| `hydra-dired-qick-sort`  | dired                 | `S`               | Options for `dired-quick-sort`       |
+| `hydra-dired-qick-sort`  | dired-mode            | `S`               | Options for `dired-quick-sort`       |
 | `org-hydra`              | org-mode              | `<`               | Org template                         |
 | `dashboard-hydra`        | dashboard-mode        | `h`/`?`           | Actions for the dashboard            |
 | `dumb-jump-hydra`        | global                | `C-M-j`           | Jump to definition                   |
@@ -219,7 +209,7 @@ or`~/.emacs.d/custom-post.el`.
 | `hideshow-hydra`         | prog-mode             | `C-~`             | Actions for `hideshow`               |
 | `lsp-ui-hydra`           | lsp-ui-mode           | `M-<f6>`          | Actions for `lsp-ui`                 |
 | `dap-hydra`              | dap-mode              | `M-<f5>`          | Actions for `dap-debug`              |
-| `elfeed-hydra`           | elfeed                | `?`               | Actions for RSS reader `elfeed`      |
+| `elfeed-hydra`           | elfeed-search-mode    | `?`               | Actions for RSS reader `elfeed`      |
 | `xwidget-hydra`          | xwidget-webkit-mode   | `?`               | Actions for embedded webkit browser  |
 
 ## Screenshots

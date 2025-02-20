@@ -1,6 +1,6 @@
 ;; init-org.el --- Initialize Org configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2006-2023 Vincent Zhang
+;; Copyright (C) 2006-2025 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -30,9 +30,8 @@
 
 ;;; Code:
 
-(require 'init-const)
-(require 'init-custom)
-(require 'init-funcs)
+(eval-when-compile
+  (require 'init-custom))
 
 (use-package org
   :ensure nil
@@ -169,7 +168,7 @@ prepended to the element after the #+HEADER: tag."
   (add-to-list 'org-structure-template-alist '("n" . "note"))
 
   ;; Use embedded webkit browser if possible
-  (when (featurep 'xwidget-internal)
+  (when (and (featurep 'xwidget-internal) (display-graphic-p))
     (push '("\\.\\(x?html?\\|pdf\\)\\'"
             .
             (lambda (file _link)
@@ -181,31 +180,15 @@ prepended to the element after the #+HEADER: tag."
   (use-package ox-gfm
     :init (add-to-list 'org-export-backends 'gfm))
 
-  (with-eval-after-load 'counsel
-    (bind-key [remap org-set-tags-command] #'counsel-org-tag org-mode-map))
-
   ;; Prettify UI
-  (if emacs/>=27p
-      (use-package org-modern
-        :hook ((org-mode . org-modern-mode)
-               (org-agenda-finalize . org-modern-agenda)
-               (org-modern-mode . (lambda ()
-                                    "Adapt `org-modern-mode'."
-                                    ;; Disable Prettify Symbols mode
-                                    (setq prettify-symbols-alist nil)
-                                    (prettify-symbols-mode -1)))))
-    (progn
-      (use-package org-superstar
-        :if (and (display-graphic-p) (char-displayable-p ?◉))
-        :hook (org-mode . org-superstar-mode)
-        :init (setq org-superstar-headline-bullets-list '("◉""○""◈""◇""⁕")))
-      (use-package org-fancy-priorities
-        :diminish
-        :hook (org-mode . org-fancy-priorities-mode)
-        :init (setq org-fancy-priorities-list
-                    (if (and (display-graphic-p) (char-displayable-p ?🅐))
-                        '("🅐" "🅑" "🅒" "🅓")
-                      '("HIGH" "MEDIUM" "LOW" "OPTIONAL"))))))
+  (use-package org-modern
+    :hook ((org-mode . org-modern-mode)
+           (org-agenda-finalize . org-modern-agenda)
+           (org-modern-mode . (lambda ()
+                                "Adapt `org-modern-mode'."
+                                ;; Disable Prettify Symbols mode
+                                (setq prettify-symbols-alist nil)
+                                (prettify-symbols-mode -1)))))
 
   ;; Babel
   (setq org-confirm-babel-evaluate nil
@@ -222,11 +205,9 @@ prepended to the element after the #+HEADER: tag."
       (sass       . t)
       (C          . t)
       (java       . t)
+      (shell      . t)
       (plantuml   . t))
     "Alist of org ob languages.")
-
-  ;; ob-sh renamed to ob-shell since 26.1.
-  (cl-pushnew '(shell . t) load-language-alist)
 
   (use-package ob-go
     :init (cl-pushnew '(go . t) load-language-alist))
@@ -244,7 +225,6 @@ prepended to the element after the #+HEADER: tag."
   (org-babel-do-load-languages 'org-babel-load-languages
                                load-language-alist)
 
-  ;; Rich text clipboard
   (use-package org-rich-yank
     :bind (:map org-mode-map
            ("C-M-y" . org-rich-yank)))
@@ -260,23 +240,18 @@ prepended to the element after the #+HEADER: tag."
            :map org-mode-map
            ("C-c M-o" . org-mime-org-buffer-htmlize)))
 
-  ;; Add graphical view of agenda
-  (use-package org-timeline
-    :hook (org-agenda-finalize . org-timeline-insert-timeline))
+  ;; Auto-toggle Org LaTeX fragments
+  (use-package org-fragtog
+    :diminish
+    :hook (org-mode . org-fragtog-mode))
 
-  (when emacs/>=27p
-    ;; Auto-toggle Org LaTeX fragments
-    (use-package org-fragtog
-      :diminish
-      :hook (org-mode . org-fragtog-mode))
-
-    ;; Preview
-    (use-package org-preview-html
-      :diminish
-      :bind (:map org-mode-map
-             ("C-c C-h" . org-preview-html-mode))
-      :init (when (featurep 'xwidget-internal)
-              (setq org-preview-html-viewer 'xwidget))))
+  ;; Preview
+  (use-package org-preview-html
+    :diminish
+    :bind (:map org-mode-map
+           ("C-c C-h" . org-preview-html-mode))
+    :init (when (and (featurep 'xwidget-internal) (display-graphic-p))
+            (setq org-preview-html-viewer 'xwidget)))
 
   ;; Presentation
   (use-package org-tree-slide
@@ -322,33 +297,31 @@ prepended to the element after the #+HEADER: tag."
         ("C-c C-x m" . org-pomodoro)))))
 
 ;; Roam
-(use-package org-roam
-  :diminish
-  :defines org-roam-graph-viewer
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
-         ("C-c n g" . org-roam-graph)
-         ("C-c n i" . org-roam-node-insert)
-         ("C-c n c" . org-roam-capture)
-         ("C-c n j" . org-roam-dailies-capture-today))
-  :init
-  (setq org-roam-directory (file-truename centaur-org-directory)
-        org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag))
-        org-roam-graph-viewer (if (featurep 'xwidget-internal)
-                                  #'xwidget-webkit-browse-url
-                                #'browse-url))
-  :config
-  (unless (file-exists-p org-roam-directory)
-    (make-directory org-roam-directory))
-  (add-to-list 'org-agenda-files (format "%s/%s" org-roam-directory "roam"))
+(when (and (fboundp 'sqlite-available-p) (sqlite-available-p))
+  (use-package org-roam
+    :diminish
+    :functions centaur-browse-url
+    :defines org-roam-graph-viewer
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n g" . org-roam-graph)
+           ("C-c n i" . org-roam-node-insert)
+           ("C-c n c" . org-roam-capture)
+           ("C-c n j" . org-roam-dailies-capture-today))
+    :init
+    (setq org-roam-directory (file-truename centaur-org-directory)
+          org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag))
+          org-roam-graph-viewer #'centaur-browse-url)
+    :config
+    (unless (file-exists-p org-roam-directory)
+      (make-directory org-roam-directory))
+    (add-to-list 'org-agenda-files (format "%s/%s" org-roam-directory "roam"))
 
-  (org-roam-db-autosync-enable))
+    (org-roam-db-autosync-enable))
 
-(when emacs/>=27p
   (use-package org-roam-ui
     :bind ("C-c n u" . org-roam-ui-mode)
-    :init (when (featurep 'xwidget-internal)
-            (setq org-roam-ui-browser-function #'xwidget-webkit-browse-url))))
+    :init (setq org-roam-ui-browser-function #'centaur-browse-url)))
 
 (provide 'init-org)
 

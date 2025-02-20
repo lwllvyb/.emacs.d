@@ -1,6 +1,6 @@
 ;; init-utils.el --- Initialize ultilities.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2006-2023 Vincent Zhang
+;; Copyright (C) 2006-2025 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -30,33 +30,31 @@
 
 ;;; Code:
 
-(require 'init-const)
-(require 'init-funcs)
-
 ;; Display available keybindings in popup
 (use-package which-key
   :diminish
   :bind ("C-h M-m" . which-key-show-major-mode)
   :hook (after-init . which-key-mode)
   :init (setq which-key-max-description-length 30
+              which-key-lighter nil
               which-key-show-remaining-keys t)
   :config
-  (which-key-add-key-based-replacements "C-c !" "flycheck")
   (which-key-add-key-based-replacements "C-c &" "yasnippet")
   (which-key-add-key-based-replacements "C-c @" "hideshow")
-  (which-key-add-key-based-replacements "C-c c" "counsel")
+  (which-key-add-key-based-replacements "C-c c" "consult")
   (which-key-add-key-based-replacements "C-c d" "dict")
+  (which-key-add-key-based-replacements "C-c l" "link-hint")
   (which-key-add-key-based-replacements "C-c n" "org-roam")
   (which-key-add-key-based-replacements "C-c t" "hl-todo")
-  (which-key-add-key-based-replacements "C-c v" "ivy-view")
   (which-key-add-key-based-replacements "C-c C-z" "browse")
 
   (which-key-add-key-based-replacements "C-x 8" "unicode")
   (which-key-add-key-based-replacements "C-x 8 e" "emoji")
   (which-key-add-key-based-replacements "C-x @" "modifior")
   (which-key-add-key-based-replacements "C-x a" "abbrev")
-  (which-key-add-key-based-replacements "C-x c" "citre")
+  (which-key-add-key-based-replacements "C-x c" "colorful")
   (which-key-add-key-based-replacements "C-x n" "narrow")
+  (which-key-add-key-based-replacements "C-x p" "project")
   (which-key-add-key-based-replacements "C-x r" "rect & bookmark")
   (which-key-add-key-based-replacements "C-x t" "tab & treemacs")
   (which-key-add-key-based-replacements "C-x x" "buffer")
@@ -106,36 +104,11 @@
       (which-key-posframe ((t (:inherit tooltip))))
       (which-key-posframe-border ((t (:inherit posframe-border :background unspecified))))
       :init
-      (setq which-key-posframe-border-width 3
+      (setq which-key-posframe-border-width posframe-border-width
             which-key-posframe-poshandler #'posframe-poshandler-frame-center-near-bottom
             which-key-posframe-parameters '((left-fringe . 8)
                                             (right-fringe . 8)))
-      (which-key-posframe-mode 1)
-      :config
-      (with-no-warnings
-        (defun my-which-key-posframe--show-buffer (act-popup-dim)
-          "Show which-key buffer when popup type is posframe.
-Argument ACT-POPUP-DIM includes the dimension, (height . width)
-of the buffer text to be displayed in the popup"
-          (when (posframe-workable-p)
-            (with-current-buffer (get-buffer-create which-key-buffer-name)
-              (let ((inhibit-read-only t))
-                (goto-char (point-min))
-                (insert (propertize "\n" 'face '(:height 0.3)))
-                (goto-char (point-max))
-                (insert (propertize "\n\n\n" 'face '(:height 0.3)))))
-            (posframe-show which-key--buffer
-		                   :font which-key-posframe-font
-		                   :position (point)
-		                   :poshandler which-key-posframe-poshandler
-		                   :background-color (face-attribute 'which-key-posframe :background nil t)
-		                   :foreground-color (face-attribute 'which-key-posframe :foreground nil t)
-		                   :height (1+ (car act-popup-dim))
-		                   :width (1+ (cdr act-popup-dim))
-		                   :internal-border-width which-key-posframe-border-width
-		                   :internal-border-color (face-attribute 'which-key-posframe-border :background nil t)
-		                   :override-parameters which-key-posframe-parameters)))
-        (advice-add #'which-key-posframe--show-buffer :override #'my-which-key-posframe--show-buffer)))))
+      (which-key-posframe-mode 1))))
 
 ;; Persistent the scratch buffer
 (use-package persistent-scratch
@@ -166,32 +139,14 @@ of the buffer text to be displayed in the popup"
          ("c" . rg-dwim-current-dir)
          ("f" . rg-dwim-current-file)
          ("m" . rg-menu))
-  :init (setq rg-group-result t
-              rg-show-columns t)
-  :config
-  (cl-pushnew '("tmpl" . "*.tmpl") rg-custom-type-aliases))
+  :init (setq rg-show-columns t)
+  :config (add-to-list 'rg-custom-type-aliases '("tmpl" . "*.tmpl")))
 
 ;; A Simple and cool pomodoro timer
 (use-package pomidor
   :bind ("s-<f12>" . pomidor)
   :init
   (setq alert-default-style 'mode-line)
-
-  (with-eval-after-load 'nerd-icons
-    (setq alert-severity-faces
-          '((urgent   . nerd-icons-red)
-            (high     . nerd-icons-orange)
-            (moderate . nerd-icons-yellow)
-            (normal   . nerd-icons-green)
-            (low      . nerd-icons-blue)
-            (trivial  . nerd-icons-purple))
-          alert-severity-colors
-          `((urgent   . ,(face-foreground 'nerd-icons-red))
-            (high     . ,(face-foreground 'nerd-icons-orange))
-            (moderate . ,(face-foreground 'nerd-icons-yellow))
-            (normal   . ,(face-foreground 'nerd-icons-green))
-            (low      . ,(face-foreground 'nerd-icons-blue))
-            (trivial  . ,(face-foreground 'nerd-icons-purple)))))
 
   (when sys/macp
     (setq pomidor-play-sound-file
@@ -209,11 +164,14 @@ of the buffer text to be displayed in the popup"
 (use-package atomic-chrome
   :hook ((emacs-startup . atomic-chrome-start-server)
          (atomic-chrome-edit-mode . delete-other-windows))
-  :init (setq atomic-chrome-buffer-open-style 'frame)
+  :init (setq atomic-chrome-buffer-frame-width 100
+              atomic-chrome-buffer-frame-height 30
+              atomic-chrome-buffer-open-style 'frame)
   :config
-  (if (fboundp 'gfm-mode)
-      (setq atomic-chrome-url-major-mode-alist
-            '(("github\\.com" . gfm-mode)))))
+  (when (fboundp 'gfm-mode)
+    (setq atomic-chrome-url-major-mode-alist
+          '(("github\\.com" . gfm-mode)
+            ("gitlab\\.*"   . gfm-mode)))))
 
 ;; Process
 (use-package proced
@@ -264,17 +222,17 @@ of the buffer text to be displayed in the popup"
 ;; text mode directory tree
 (use-package ztree
   :custom-face
-  (ztreep-header-face ((t (:inherit diff-header))))
-  (ztreep-arrow-face ((t (:inherit font-lock-comment-face))))
-  (ztreep-leaf-face ((t (:inherit diff-index))))
-  (ztreep-node-face ((t (:inherit font-lock-variable-name-face))))
+  (ztreep-header-face ((t (:inherit diff-header :foreground unspecified))))
+  (ztreep-arrow-face ((t (:inherit font-lock-comment-face :foreground unspecified))))
+  (ztreep-leaf-face ((t (:inherit diff-index :foreground unspecified))))
+  (ztreep-node-face ((t (:inherit font-lock-variable-name-face :foreground unspecified))))
   (ztreep-expand-sign-face ((t (:inherit font-lock-function-name-face))))
-  (ztreep-diff-header-face ((t (:inherit (diff-header bold)))))
-  (ztreep-diff-header-small-face ((t (:inherit diff-file-header))))
-  (ztreep-diff-model-normal-face ((t (:inherit font-lock-doc-face))))
-  (ztreep-diff-model-ignored-face ((t (:inherit font-lock-doc-face :strike-through t))))
-  (ztreep-diff-model-diff-face ((t (:inherit diff-removed))))
-  (ztreep-diff-model-add-face ((t (:inherit diff-nonexistent))))
+  (ztreep-diff-header-face ((t (:inherit (diff-header bold :foreground unspecified)))))
+  (ztreep-diff-header-small-face ((t (:inherit diff-file-header :foreground unspecified))))
+  (ztreep-diff-model-normal-face ((t (:inherit font-lock-doc-face :foreground unspecified))))
+  (ztreep-diff-model-ignored-face ((t (:inherit font-lock-doc-face :strike-through t :foreground unspecified))))
+  (ztreep-diff-model-diff-face ((t (:inherit diff-removed :foreground unspecified))))
+  (ztreep-diff-model-add-face ((t (:inherit diff-nonexistent :foreground unspecified))))
   :pretty-hydra
   ((:title (pretty-hydra-title "Ztree" 'octicon "nf-oct-diff" :face 'nerd-icons-green)
     :color pink :quit-key ("q" "C-g"))
@@ -304,11 +262,6 @@ of the buffer text to be displayed in the popup"
 (use-package memory-usage)
 
 (use-package list-environment
-  :hook (list-environment-mode . (lambda ()
-                                   (setq tabulated-list-format
-                                         (vconcat `(("" ,(if (icons-displayable-p) 2 0)))
-                                                  tabulated-list-format))
-                                   (tabulated-list-init-header)))
   :init
   (with-no-warnings
     (defun my-list-environment-entries ()
@@ -318,9 +271,6 @@ of the buffer text to be displayed in the popup"
                        (key (car kv))
                        (val (mapconcat #'identity (cdr kv) "=")))
                   (list key (vector
-                             (if (icons-displayable-p)
-                                 (nerd-icons-octicon "key" :height 0.8 :v-adjust -0.05)
-                               "")
                              `(,key face font-lock-keyword-face)
                              `(,val face font-lock-string-face)))))
               process-environment))

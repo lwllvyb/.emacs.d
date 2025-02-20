@@ -1,6 +1,6 @@
 ;; init-custom.el --- Define customizations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2006-2023 Vincent Zhang
+;; Copyright (C) 2006-2025 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -30,6 +30,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'package))
+
 (defgroup centaur nil
   "Centaur Emacs customization."
   :group 'convenience
@@ -57,12 +60,12 @@
   :group 'centaur
   :type 'string)
 
-(defcustom centaur-proxy "127.0.0.1:1087"
+(defcustom centaur-proxy "127.0.0.1:7897"
   "Set HTTP/HTTPS proxy."
   :group 'centaur
   :type 'string)
 
-(defcustom centaur-socks-proxy "127.0.0.1:1086"
+(defcustom centaur-socks-proxy "127.0.0.1:7897"
   "Set SOCKS proxy."
   :group 'centaur
   :type 'string)
@@ -84,12 +87,12 @@
     `((melpa    . (("gnu"    . ,(format "%s://elpa.gnu.org/packages/" proto))
                    ("nongnu" . ,(format "%s://elpa.nongnu.org/nongnu/" proto))
                    ("melpa"  . ,(format "%s://melpa.org/packages/" proto))))
-      (emacs-cn . (("gnu"    . "http://1.15.88.122/gnu/")
-                   ("nongnu" . "http://1.15.88.122/nongnu/")
-                   ("melpa"  . "http://1.15.88.122/melpa/")))
       (bfsu     . (("gnu"    . ,(format "%s://mirrors.bfsu.edu.cn/elpa/gnu/" proto))
                    ("nongnu" . ,(format "%s://mirrors.bfsu.edu.cn/elpa/nongnu/" proto))
                    ("melpa"  . ,(format "%s://mirrors.bfsu.edu.cn/elpa/melpa/" proto))))
+      (iscas    . (("gnu"    . ,(format "%s://mirror.iscas.ac.cn/elpa/gnu/" proto))
+                   ("nongnu" . ,(format "%s://mirror.iscas.ac.cn/elpa/nongnu/" proto))
+                   ("melpa"  . ,(format "%s://mirror.iscas.ac.cn/elpa/melpa/" proto))))
       (netease  . (("gnu"    . ,(format "%s://mirrors.163.com/elpa/gnu/" proto))
                    ("nongnu" . ,(format "%s://mirrors.163.com/elpa/nongnu/" proto))
                    ("melpa"  . ,(format "%s://mirrors.163.com/elpa/melpa/" proto))))
@@ -143,7 +146,7 @@
   "List of themes mapped to the time they should be loaded.
 
 The keywords `:sunrise' and `:sunset' can be used for the time
-if `calendar-latitude' and `calendar-longitude' are set.
+if the option `calendar-latitude' and option `calendar-longitude' are set.
 For example:
   \\='((:sunrise . doom-one-light)
     (:sunset  . doom-one))"
@@ -187,18 +190,11 @@ If Non-nil, use dashboard, otherwise will restore previous session."
   :group 'centaur
   :type 'boolean)
 
-(defcustom centaur-restore-frame-geometry t
-  "Restore the frame's geometry at startup.
-If Non-nil, save and restore the frame's geometry."
-  :group 'centaur
-  :type 'boolean)
-
-(defcustom centaur-lsp 'lsp-mode
+(defcustom centaur-lsp 'eglot
   "Set language server.
 
 `lsp-mode': See https://github.com/emacs-lsp/lsp-mode.
 `eglot': See https://github.com/joaotavora/eglot.
-tags: Use tags file instead of language server. See https://github.com/universal-ctags/citre.
 nil means disabled."
   :group 'centaur
   :type '(choice (const :tag "LSP Mode" lsp-mode)
