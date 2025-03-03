@@ -1,6 +1,6 @@
 ;; init-dashboard.el --- Initialize dashboard configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2023 Vincent Zhang
+;; Copyright (C) 2018-2025 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -30,18 +30,13 @@
 
 ;;; Code:
 
-(require 'init-const)
-(require 'init-custom)
-(require 'init-funcs)
+(eval-when-compile
+  (require 'init-custom))
 
 ;; Dashboard
 (when centaur-dashboard
   (use-package dashboard
     :diminish dashboard-mode
-    :functions (nerd-icons-faicon
-                nerd-icons-mdicon
-                winner-undo
-                widget-forward)
     :custom-face
     (dashboard-heading ((t (:inherit (font-lock-string-face bold)))))
     (dashboard-items-face ((t (:weight normal))))
@@ -52,8 +47,7 @@
      ("Navigator"
       (("U" update-config-and-packages "update" :exit t)
        ("H" browse-homepage "homepage" :exit t)
-       ("R" restore-previous-session "recover session" :exit t)
-       ("L" restore-session "list sessions" :exit t)
+       ("R" restore-session "recover session" :exit t)
        ("S" find-custom-file "settings" :exit t))
       "Section"
       (("}" dashboard-next-section "next")
@@ -75,19 +69,13 @@
     :bind (("<f2>" . open-dashboard)
            :map dashboard-mode-map
            ("H" . browse-homepage)
-           ("R" . restore-previous-session)
-           ("L" . restore-session)
+           ("R" . restore-session)
            ("S" . find-custom-file)
            ("U" . update-config-and-packages)
            ("q" . quit-dashboard)
            ("h" . dashboard-hydra/body)
            ("?" . dashboard-hydra/body))
-    :hook (dashboard-mode . (lambda ()
-                              ;; No title
-                              (setq-local frame-title-format nil)
-                              ;; Enable `page-break-lines-mode'
-                              (when (fboundp 'page-break-lines-mode)
-                                (page-break-lines-mode 1))))
+    :hook (dashboard-mode . (lambda () (setq-local frame-title-format nil)))
     :init
     (setq dashboard-banner-logo-title "CENTAUR EMACS - Enjoy Programming & Writing"
           dashboard-startup-banner (or centaur-logo 'official)
@@ -96,14 +84,24 @@
           dashboard-path-style 'truncate-middle
           dashboard-path-max-length 60
           dashboard-center-content t
+          dashboard-vertically-center-content t
           dashboard-show-shortcuts nil
           dashboard-items '((recents  . 10)
                             (bookmarks . 5)
                             (projects . 5))
 
-          dashboard-set-init-info t
+          dashboard-startupify-list '(dashboard-insert-banner
+                                      dashboard-insert-newline
+                                      dashboard-insert-banner-title
+                                      dashboard-insert-newline
+                                      dashboard-insert-navigator
+                                      dashboard-insert-newline
+                                      dashboard-insert-init-info
+                                      dashboard-insert-items
+                                      dashboard-insert-newline
+                                      dashboard-insert-footer)
+
           dashboard-display-icons-p #'icons-displayable-p
-          dashboard-icon-type 'nerd-icons
           dashboard-set-file-icons centaur-icon
           dashboard-set-heading-icons centaur-icon
           dashboard-heading-icons '((recents   . "nf-oct-history")
@@ -112,37 +110,33 @@
                                     (projects  . "nf-oct-briefcase")
                                     (registers . "nf-oct-database"))
 
-          dashboard-set-footer t
-          dashboard-footer-icon (cond
-                                 ((icons-displayable-p)
-                                  (nerd-icons-octicon "nf-oct-heart" :height 1.2 :face 'nerd-icons-lred))
-
-                                 (t (propertize ">" 'face 'dashboard-footer)))
-
-          dashboard-set-navigator t
           dashboard-navigator-buttons
           `(((,(when (icons-displayable-p)
-                 (nerd-icons-mdicon "nf-md-github" :height 1.5))
+                 (nerd-icons-mdicon "nf-md-github" :height 1.4))
               "Homepage" "Browse homepage"
               (lambda (&rest _) (browse-url centaur-homepage)))
              (,(when (icons-displayable-p)
                  (nerd-icons-mdicon "nf-md-backup_restore" :height 1.5))
               "Restore" "Restore previous session"
-              (lambda (&rest _) (restore-previous-session)))
+              (lambda (&rest _) (restore-session)))
              (,(when (icons-displayable-p)
-                 (nerd-icons-mdicon "nf-md-tools" :height 1.5))
+                 (nerd-icons-mdicon "nf-md-tools" :height 1.3))
               "Settings" "Open custom file"
               (lambda (&rest _) (find-file custom-file)))
              (,(when (icons-displayable-p)
-                 (nerd-icons-mdicon "nf-md-update" :height 1.5))
+                 (nerd-icons-mdicon "nf-md-update" :height 1.3))
               "Update" "Update Centaur Emacs"
               (lambda (&rest _) (centaur-update)))
              (,(if (icons-displayable-p)
-                   (nerd-icons-mdicon "nf-md-help" :height 1.5)
+                   (nerd-icons-mdicon "nf-md-help" :height 1.2)
                  "?")
               "" "Help (?/h)"
-              (lambda (&rest _) (dashboard-hydra/body))
-              font-lock-string-face))))
+              (lambda (&rest _) (dashboard-hydra/body)))))
+
+          dashboard-footer-icon
+          (if (icons-displayable-p)
+              (nerd-icons-octicon "nf-oct-heart" :height 1.2 :face 'nerd-icons-lred)
+            (propertize ">" 'face 'dashboard-footer)))
 
     (dashboard-setup-startup-hook)
     :config
@@ -150,29 +144,23 @@
     ;; @see https://github.com/emacs-dashboard/emacs-dashboard/issues/219
     (defun my-dashboard-insert-copyright ()
       "Insert copyright in the footer."
-      (when dashboard-set-footer
-        (dashboard-insert-center
-         (propertize (format "\nPowered by Vincent Zhang, %s\n" (format-time-string "%Y"))
-                     'face 'font-lock-comment-face))))
+      (dashboard-insert-center
+       (propertize (format "\nPowered by Vincent Zhang, %s\n" (format-time-string "%Y"))
+                   'face 'font-lock-comment-face)))
     (advice-add #'dashboard-insert-footer :after #'my-dashboard-insert-copyright)
 
-    (defun restore-previous-session ()
+    (defun restore-session ()
       "Restore the previous session."
       (interactive)
-      (when (bound-and-true-p persp-mode)
-        (restore-session persp-auto-save-fname)))
+      (message "Restoring previous session...")
+      (quit-window t)
 
-    (defun restore-session (fname)
-      "Restore the specified session."
-      (interactive (list (read-file-name "Load perspectives from a file: "
-                                         persp-save-dir)))
-      (when (bound-and-true-p persp-mode)
-        (message "Restoring session...")
-        (quit-window t)
-        (condition-case-unless-debug err
-            (persp-load-state-from-file fname)
-          (error "Error: Unable to restore session -- %s" err))
-        (message "Restoring session...done")))
+      (when (fboundp 'tabspaces-mode)
+        (unless tabspaces-mode
+          (tabspaces-mode t))
+        (tabspaces-restore-session))
+
+      (message "Restoring previous session...done"))
 
     (defun dashboard-goto-recent-files ()
       "Go to recent files."
@@ -220,6 +208,14 @@
       "Quit dashboard window."
       (interactive)
       (quit-window t)
+
+      ;; Create workspace
+      (when (fboundp 'tabspaces-mode)
+        (unless tabspaces-mode
+          (tabspaces-mode t)
+          (tabspaces-switch-or-create-workspace tabspaces-default-tab)))
+
+      ;; Recover layout
       (and dashboard-recover-layout-p
            (and (bound-and-true-p winner-mode) (winner-undo))
            (setq dashboard-recover-layout-p nil)))))

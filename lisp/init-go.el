@@ -1,6 +1,6 @@
 ;; init-go.el --- Initialize Golang configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2023 Vincent Zhang
+;; Copyright (C) 2018-2025 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -30,9 +30,12 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'init-custom))
+
 ;; Golang
 (use-package go-mode
-  :functions go-install-tools
+  :functions (go-install-tools exec-path-from-shell-copy-envs)
   :autoload godoc-gogetdoc
   :bind (:map go-mode-map
          ("<f1>" . godoc))
@@ -100,10 +103,9 @@
            ("C-c t c" . go-test-current-coverage)
            ("C-c t x" . go-run))))
 
-;; Local Golang playground for short snippets
-(use-package go-playground
-  :diminish
-  :commands go-playground-mode)
+(when (centaur-treesit-available-p)
+  (use-package go-ts-mode
+    :init (setq go-ts-mode-indent-offset 4)))
 
 (provide 'init-go)
 

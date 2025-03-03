@@ -1,6 +1,6 @@
-;; init-yasnippet.el --- Initialize yasnippet configurations.	-*- lexical-binding: t -*-
+;; init-snippet.el --- Initialize snippet configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2006-2023 Vincent Zhang
+;; Copyright (C) 2006-2025 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -25,7 +25,7 @@
 
 ;;; Commentary:
 ;;
-;; Yasnippet configurations.
+;; Snippet configurations.
 ;;
 
 ;;; Code:
@@ -38,7 +38,11 @@
 ;; Collection of yasnippet snippets
 (use-package yasnippet-snippets)
 
-(provide 'init-yasnippet)
+;; Yasnippet Completion At Point Function
+(use-package yasnippet-capf
+  :init (add-to-list 'completion-at-point-functions #'yasnippet-capf))
+
+(provide 'init-snippet)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; init-yasnippet.el ends here
+;;; init-snippet.el ends here
