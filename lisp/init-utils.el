@@ -283,6 +283,25 @@
   :init (setq ztree-draw-unicode-lines t
               ztree-show-number-of-children t))
 
+;; A suite of opinionated Transient UIs
+(use-package casual-suite
+  :bind ((:map global-map
+          ("C-'" . casual-avy-tmenu)
+          ("C-o" . casual-editkit-main-tmenu))
+         (:map bookmark-bmenu-mode-map ("C-o" . casual-bookmarks-tmenu))
+         (:map calc-mode-map ("C-o" . casual-calc-tmenu))
+         (:map dired-mode-map ("C-o" . casual-dired-tmenu))
+         (:map ibuffer-mode-map
+          ("C-o" . casual-ibuffer-tmenu)
+          ("F" . casual-ibuffer-filter-tmenu)
+          ("s" . casual-ibuffer-sortby-tmenu))
+         (:map isearch-mode-map ("C-o" . casual-isearch-tmenu))
+         (:map org-agenda-mode-map ("C-o" . casual-agenda-tmenu))
+         (:map reb-mode-map ("C-o" . casual-re-builder-tmenu))
+         (:map reb-lisp-mode-map ("C-o" . casual-re-builder-tmenu))
+         (:map symbol-overlay-map ("C-o" . casual-symbol-overlay-tmenu))
+         (:map Info-mode-map ("C-o" . casual-info-tmenu))))
+
 ;; Misc
 (use-package disk-usage)
 (use-package memory-usage)
